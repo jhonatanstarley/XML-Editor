@@ -11,8 +11,10 @@
   "license": "ISC",
   "description": "Editor de XML para fluxos de projetos desenvolvidos no Draw.io. Uso específico empresa Embrasac.",
   "dependencies": {
+    "ejs": "^3.1.10",
     "express": "^4.19.2",
     "express-fileupload": "^1.5.1",
+    "socket.io": "^4.7.5",
     "uuid": "^10.0.0"
   }
 }

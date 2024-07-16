@@ -3,6 +3,8 @@ const validObjects = [];
 let xmlDoc;
 let sessionId = new URLSearchParams(window.location.search).get('sessionId');
 
+const socket = io();
+
 document.getElementById('xmlFile').addEventListener('change', function(event) {
     const uploadButton = document.getElementById('uploadButton');
     uploadButton.classList.remove('d-none');
@@ -25,6 +27,8 @@ document.getElementById('uploadButton').addEventListener('click', function(event
             url.searchParams.set('sessionId', sessionId);
             window.history.pushState({}, '', url);
             loadXML(`/xml/${sessionId}`);
+            showShareButton(url.toString());
+            socket.emit('joinSession', sessionId);
         })
         .catch(error => console.error('Error uploading file:', error));
     }
@@ -43,7 +47,14 @@ function loadXML(url) {
 
 if (sessionId) {
     loadXML(`/xml/${sessionId}`);
+    socket.emit('joinSession', sessionId);
 }
+
+socket.on('updateXML', (xmlContent) => {
+    const parser = new DOMParser();
+    xmlDoc = parser.parseFromString(xmlContent, 'text/xml');
+    processXML(xmlDoc);
+});
 
 function processXML(xmlDoc) {
     const diagrams = xmlDoc.getElementsByTagName('diagram');
@@ -207,7 +218,7 @@ themeToggle.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
     const isDarkMode = document.body.classList.contains('dark-mode');
 
-    themeIcon.className = isDarkMode ? 'fas fa-moon' : 'fas fa-sun';
+    themeIcon.className = isDarkMode ? document.querySelector('#themeToggle svg').attributes[4].value = 'moon' : document.querySelector('#themeToggle svg').attributes[4].value = 'sun';
     document.body.classList.toggle('bg-dark', isDarkMode);
     document.body.classList.toggle('text-light', isDarkMode);
 });
