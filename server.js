@@ -9,15 +9,17 @@ const socketIo = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
-
 const PORT = process.env.PORT || 3000;
 
 // Configurar o mecanismo de visualização EJS
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Servir arquivos estáticos da pasta "public"
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 app.use(fileUpload());
-app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Rota para renderizar o index.ejs
 app.get('/', (req, res) => {
@@ -27,7 +29,7 @@ app.get('/', (req, res) => {
 // Endpoint para upload do XML
 app.post('/upload', (req, res) => {
     if (!req.files || Object.keys(req.files).length === 0) {
-        return res.status(400).send('No files were uploaded.');
+        return res.status(400).json({ error: 'No files were uploaded.' });
     }
 
     const xmlFile = req.files.xmlFile;
@@ -35,7 +37,7 @@ app.post('/upload', (req, res) => {
     const uploadPath = path.join(__dirname, 'uploads', `${sessionId}.xml`);
 
     xmlFile.mv(uploadPath, (err) => {
-        if (err) return res.status(500).send(err);
+        if (err) return res.status(500).json({ error: err.message });
         res.json({ sessionId });
     });
 });
@@ -48,27 +50,24 @@ app.get('/xml/:sessionId', (req, res) => {
     if (fs.existsSync(filePath)) {
         res.sendFile(filePath);
     } else {
-        res.status(404).send('File not found.');
+        res.status(404).json({ error: 'File not found.' });
     }
 });
 
-// WebSocket para atualizações em tempo real
+// Configurar socket.io para sincronização em tempo real
 io.on('connection', (socket) => {
     console.log('New client connected');
 
     socket.on('joinSession', (sessionId) => {
         socket.join(sessionId);
+        console.log(`Client joined session ${sessionId}`);
     });
 
-    socket.on('saveChanges', (data) => {
-        const filePath = path.join(__dirname, 'uploads', `${data.sessionId}.xml`);
-        fs.writeFile(filePath, data.xmlContent, (err) => {
-            if (err) {
-                console.error('Error saving XML:', err);
-            } else {
-                io.to(data.sessionId).emit('updateXML', data.xmlContent);
-            }
-        });
+    socket.on('updateXML', (data) => {
+        const { sessionId, xmlContent } = data;
+        const filePath = path.join(__dirname, 'uploads', `${sessionId}.xml`);
+        fs.writeFileSync(filePath, xmlContent);
+        socket.to(sessionId).emit('updateXML', xmlContent);
     });
 
     socket.on('disconnect', () => {
