@@ -3,17 +3,8 @@ const fileUpload = require('express-fileupload');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
-const http = require('http');
-const socketIo = require('socket.io');
 
 const app = express();
-const server = http.createServer(app);
-const io = socketIo(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
-});
 const PORT = process.env.PORT || 3000;
 
 // Configurar o mecanismo de visualização EJS
@@ -59,27 +50,6 @@ app.get('/xml/:sessionId', (req, res) => {
     }
 });
 
-// Configurar socket.io para sincronização em tempo real
-io.on('connection', (socket) => {
-    console.log('New client connected');
-
-    socket.on('joinSession', (sessionId) => {
-        socket.join(sessionId);
-        console.log(`Client joined session ${sessionId}`);
-    });
-
-    socket.on('updateXML', (data) => {
-        const { sessionId, xmlContent } = data;
-        const filePath = path.join(__dirname, 'uploads', `${sessionId}.xml`);
-        fs.writeFileSync(filePath, xmlContent);
-        socket.to(sessionId).emit('updateXML', xmlContent);
-    });
-
-    socket.on('disconnect', () => {
-        console.log('Client disconnected');
-    });
-});
-
-server.listen(PORT, () => {
+app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

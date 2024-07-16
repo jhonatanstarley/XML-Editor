@@ -54,7 +54,14 @@
             color: black !important;
         }
 
-        .floating-button {
+        #downloadButton.floating-button {
+            position: fixed;
+            bottom: 66px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        #shareButton.floating-button {
             position: fixed;
             bottom: 20px;
             right: 20px;
@@ -102,7 +109,7 @@
             <!-- Botão de download flutuante -->
             <button id="downloadButton" class="btn btn-success floating-button d-none">Download</button>
             <!-- Botão de compartilhar a sessão -->
-            <button id="shareButton" class="btn btn-info floating-button d-none" style="right: 100px;">Compartilhar Sessão</button>
+            <button id="shareButton" class="btn btn-info floating-button d-none">Compartilhar Sessão</button>
         </div>
     </main>
 

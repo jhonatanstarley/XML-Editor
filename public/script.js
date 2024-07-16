@@ -3,8 +3,6 @@ const validObjects = [];
 let xmlDoc;
 let sessionId = new URLSearchParams(window.location.search).get('sessionId');
 
-const socket = io();
-
 document.getElementById('xmlFile').addEventListener('change', function(event) {
     const uploadButton = document.getElementById('uploadButton');
     uploadButton.classList.remove('d-none');
@@ -22,17 +20,12 @@ document.getElementById('uploadButton').addEventListener('click', function(event
         })
         .then(response => response.json())
         .then(data => {
-            if (data.error) {
-                console.error('Error:', data.error);
-                return;
-            }
             sessionId = data.sessionId;
             const url = new URL(window.location.href);
             url.searchParams.set('sessionId', sessionId);
             window.history.pushState({}, '', url);
             loadXML(`/xml/${sessionId}`);
-            showShareButton(url.toString());
-            socket.emit('joinSession', sessionId);
+            showShareButton(url.href); // Mostra o botão de compartilhar com o link da sessão
         })
         .catch(error => console.error('Error uploading file:', error));
     }
@@ -51,14 +44,7 @@ function loadXML(url) {
 
 if (sessionId) {
     loadXML(`/xml/${sessionId}`);
-    socket.emit('joinSession', sessionId);
 }
-
-socket.on('updateXML', (xmlContent) => {
-    const parser = new DOMParser();
-    xmlDoc = parser.parseFromString(xmlContent, 'text/xml');
-    processXML(xmlDoc);
-});
 
 function showShareButton(url) {
     const shareButton = document.getElementById('shareButton');
