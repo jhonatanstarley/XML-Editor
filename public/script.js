@@ -22,6 +22,10 @@ document.getElementById('uploadButton').addEventListener('click', function(event
         })
         .then(response => response.json())
         .then(data => {
+            if (data.error) {
+                console.error('Error:', data.error);
+                return;
+            }
             sessionId = data.sessionId;
             const url = new URL(window.location.href);
             url.searchParams.set('sessionId', sessionId);
@@ -55,6 +59,14 @@ socket.on('updateXML', (xmlContent) => {
     xmlDoc = parser.parseFromString(xmlContent, 'text/xml');
     processXML(xmlDoc);
 });
+
+function showShareButton(url) {
+    const shareButton = document.getElementById('shareButton');
+    shareButton.classList.remove('d-none');
+    shareButton.addEventListener('click', () => {
+        prompt('Copie o link para compartilhar a sessão:', url);
+    });
+}
 
 function processXML(xmlDoc) {
     const diagrams = xmlDoc.getElementsByTagName('diagram');
